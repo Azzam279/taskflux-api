@@ -1,0 +1,39 @@
+services:
+  app:
+    build: ./
+    container_name: taskflux-api
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mongo
+    environment:
+      MONGODB_URI: '${MONGODB_URI}'
+    networks:
+      - appnet
+    command: >
+      bash -c "composer install &&
+               php artisan key:generate &&
+               php artisan serve --host=0.0.0.0 --port=8000"
+
+  mongo:
+    image: mongo:7
+    container_name: mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: '${MONGO_INITDB_ROOT_USERNAME}'
+      MONGO_INITDB_ROOT_PASSWORD: '${MONGO_INITDB_ROOT_PASSWORD}'
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - appnet
+
+networks:
+  appnet:
+
+volumes:
+  mongo_data:

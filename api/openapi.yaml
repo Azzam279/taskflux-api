@@ -1,0 +1,267 @@
+openapi: 3.1.0
+info:
+  title: TaskFlux API
+  version: 1.0.0
+  description: |
+    Mock-authenticated Task CRUD API built with Laravel and MongoDB.
+    Supports filtering, sorting, pagination, and proper response metadata.
+paths:
+  /api/login:
+    post:
+      summary: Mock login
+      description: Returns a mock bearer token for demonstration.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 6
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+        '422':
+          description: Validation error
+  /api/tasks:
+    get:
+      summary: List tasks with filter, sort, and pagination
+      description: >
+        Returns a paginated list of tasks.  
+        Supports filtering by status, priority, ownerId, and text search by title/description.  
+        Also supports date range (`dueFrom`, `dueTo`) and sorting using `sort` parameter.
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [todo, doing, done]
+          description: Filter by task status
+        - in: query
+          name: priority
+          schema:
+            type: string
+            enum: [low, medium, high]
+          description: Filter by priority
+        - in: query
+          name: ownerId
+          schema:
+            type: string
+          description: Filter by owner ID
+        - in: query
+          name: q
+          schema:
+            type: string
+          description: Full-text search by title or description
+        - in: query
+          name: dueFrom
+          schema:
+            type: string
+            format: date-time
+          description: Filter tasks due after this date
+        - in: query
+          name: dueTo
+          schema:
+            type: string
+            format: date-time
+          description: Filter tasks due before this date
+        - in: query
+          name: sort
+          schema:
+            type: string
+            default: -created_at
+          description: >
+            Sort by field; prefix with '-' for descending (e.g. `-created_at`).
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+          description: Page number
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 100
+          description: Items per page
+      responses:
+        '200':
+          description: Successful list of tasks
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskListResponse'
+    post:
+      summary: Create task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '422':
+          description: Validation error
+  /api/tasks/{id}:
+    put:
+      summary: Update task
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskUpdate'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '404':
+          description: Not Found
+        '422':
+          description: Validation error
+    delete:
+      summary: Delete task
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: No Content
+        '404':
+          description: Not Found
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    Task:
+      type: object
+      properties:
+        _id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [todo, doing, done]
+        priority:
+          type: string
+          enum: [low, medium, high]
+        dueDate:
+          type: string
+          format: date-time
+          nullable: true
+        ownerId:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    TaskCreate:
+      type: object
+      required: [title, status, priority]
+      properties:
+        title:
+          type: string
+          maxLength: 150
+        description:
+          type: string
+          maxLength: 2000
+          nullable: true
+        status:
+          type: string
+          enum: [todo, doing, done]
+        priority:
+          type: string
+          enum: [low, medium, high]
+        dueDate:
+          type: string
+          format: date-time
+          nullable: true
+    TaskUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 150
+        description:
+          type: string
+          maxLength: 2000
+          nullable: true
+        status:
+          type: string
+          enum: [todo, doing, done]
+        priority:
+          type: string
+          enum: [low, medium, high]
+        dueDate:
+          type: string
+          format: date-time
+          nullable: true
+    TaskListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+        meta:
+          type: object
+          properties:
+            page:
+              type: integer
+              example: 1
+            per_page:
+              type: integer
+              example: 10
+            total:
+              type: integer
+              example: 42
+            last_page:
+              type: integer
+              example: 5
+            sort:
+              type: string
+              example: "-created_at"
+security:
+  - bearerAuth: []
