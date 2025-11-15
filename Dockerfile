@@ -1,21 +1,26 @@
-# Start from an official PHP image
-FROM php:8.2-fpm-alpine
+FROM php:8.3-cli
 
-# Install system dependencies needed for MongoDB extension
-RUN apk add --no-cache autoconf build-base
+# System deps
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends git unzip libssl-dev pkg-config libzip-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install the MongoDB PHP extension using PECL
-RUN pecl install mongodb \
-    && docker-php-ext-enable mongodb
+# PHP MongoDB driver
+RUN pecl install mongodb && docker-php-ext-enable mongodb
 
-WORKDIR /app
-COPY . /app
+# Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Install Composer dependencies
-RUN composer install --no-dev --optimize-autoloader
+WORKDIR /var/www/html
 
-# Expose port 8000 for your app
+# Install PHP deps first to leverage Docker layer cache
+COPY composer.json composer.lock* ./
+RUN composer install --no-interaction --prefer-dist --no-dev || true
+
+# App source
+COPY . .
+
+# Ensure storage bootstrap perms (optional for local dev)
+RUN chmod -R a+w storage bootstrap/cache || true
+
 EXPOSE 8000
-
-# Start your application (example for Laravel)
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
