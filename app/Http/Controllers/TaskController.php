@@ -32,15 +32,11 @@ class TaskController extends Controller
                     ->orWhere('description', 'like', "%{$search}%");
             });
         }
-        logger()->info('Due from: ' . $request->query('dueFrom'));
-        logger()->info('Due to: ' . $request->query('dueTo'));
         if ($dueFrom = $request->query('dueFrom')) {
-            $query->where('dueDate', '>=', Carbon::parse($dueFrom)->toIso8601String());
-            logger()->info('Due from (converted): ' . Carbon::parse($dueFrom)->toIso8601String());
+            $query->where('dueDate', '>=', Carbon::parse($dueFrom)->startOfDay());
         }
         if ($dueTo = $request->query('dueTo')) {
-            $query->where('dueDate', '<=', Carbon::parse($dueTo)->toIso8601String());
-            logger()->info('Due to (converted): ' . Carbon::parse($dueTo)->toIso8601String());
+            $query->where('dueDate', '<=', Carbon::parse($dueTo)->endOfDay());
         }
 
         // sort (default newest)
