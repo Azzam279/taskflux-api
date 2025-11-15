@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Http\Requests\TaskStoreRequest;
 use App\Http\Requests\TaskUpdateRequest;
+use Carbon\Carbon;
 
 class TaskController extends Controller
 {
@@ -31,11 +32,15 @@ class TaskController extends Controller
                     ->orWhere('description', 'like', "%{$search}%");
             });
         }
+        logger()->info('Due from: ' . $request->query('dueFrom'));
+        logger()->info('Due to: ' . $request->query('dueTo'));
         if ($dueFrom = $request->query('dueFrom')) {
-            $query->where('dueDate', '>=', $dueFrom);
+            $query->where('dueDate', '>=', Carbon::parse($dueFrom)->toIso8601String());
+            logger()->info('Due from (converted): ' . Carbon::parse($dueFrom)->toIso8601String());
         }
         if ($dueTo = $request->query('dueTo')) {
-            $query->where('dueDate', '<=', $dueTo);
+            $query->where('dueDate', '<=', Carbon::parse($dueTo)->toIso8601String());
+            logger()->info('Due to (converted): ' . Carbon::parse($dueTo)->toIso8601String());
         }
 
         // sort (default newest)
