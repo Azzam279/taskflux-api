@@ -24,9 +24,6 @@ class TaskController extends Controller
         if ($priority = $request->query('priority')) {
             $query->where('priority', $priority);
         }
-        if ($ownerId = $request->query('ownerId')) {
-            $query->where('ownerId', $ownerId);
-        }
         if ($search = $request->query('q')) {
             // text search on title/description (Mongo $text) if index exists, else fallback regex
             $query->where(function($q) use ($search) {
@@ -45,6 +42,7 @@ class TaskController extends Controller
         $sort = $request->query('sort', '-created_at');
         $direction = str_starts_with($sort, '-') ? 'desc' : 'asc';
         $field = ltrim($sort, '+-');
+        $query->where('ownerId', $request->header('X-Owner-Id'));
         $query->orderBy($field, $direction);
 
         // pagination (page, per_page)
