@@ -43,7 +43,7 @@ class TaskController extends Controller
         $sort = $request->query('sort', '-created_at');
         $direction = str_starts_with($sort, '-') ? 'desc' : 'asc';
         $field = ltrim($sort, '+-');
-        $query->where('ownerId', $request->header('X-Owner-Id'));
+        $query->where('ownerId', $request->header('X-Owner-Id') ?? 'demo-user');
         $query->orderBy($field, $direction);
 
         // pagination (page, per_page)

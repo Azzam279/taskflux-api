@@ -15,7 +15,7 @@ A full-stack assignment with a **Laravel API** and **Vue 3** frontend.
 - **Testing**: Feature tests cover login and CRUD happy-path.
 - **Indexes**: Compound index supports common filters + date sort; single-field + text index for broader queries. See `db/indexes.js`.
 
-## Run Locally
+## Run The API Locally
 ```bash
 git clone https://github.com/Azzam279/taskflux-api.git
 ```
@@ -34,4 +34,14 @@ php artisan key:generate
 ```
 ```bash
 php artisan serve
+```
+
+## Run Unit Test
+```bash
+php artisan test
+```
+
+or if using Docker
+```bash
+docker compose exec app php artisan test
 ```
